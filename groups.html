@@ -188,19 +188,21 @@
       container.appendChild(div);
     }
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        db.collection("groups").where("userId", "==", user.uid).get().then(snapshot => {
-          if (snapshot.empty) {
-            container.innerHTML = "<p>No groups found for your account.</p>";
-          } else {
-            snapshot.forEach(doc => renderGroup(doc));
-          }
-        });
-      } else {
-        // Redirect to login if not signed in
-        window.location.href = "login.html";
-      }
+    // 🔐 Set persistence & check login
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          db.collection("groups").where("userId", "==", user.uid).get().then(snapshot => {
+            if (snapshot.empty) {
+              container.innerHTML = "<p>No groups found for your account.</p>";
+            } else {
+              snapshot.forEach(doc => renderGroup(doc));
+            }
+          });
+        } else {
+          window.location.href = "login.html";
+        }
+      });
     });
   </script>
 </body>
