@@ -9,6 +9,7 @@
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f1f5f9;
+      margin: 0;
       padding: 20px;
       color: #333;
     }
@@ -31,7 +32,13 @@
       padding: 15px;
       border-radius: 12px;
       margin: 20px 0;
-      word-break: break-all;
+    }
+    .referral-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      color: #007B55;
     }
     .copy-btn {
       margin-top: 10px;
@@ -42,6 +49,14 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      display: none;
     }
     .guidelines {
       margin-top: 30px;
@@ -55,14 +70,6 @@
     }
     .guidelines li {
       margin-bottom: 10px;
-    }
-    .success {
-      background-color: #d4edda;
-      color: #155724;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      display: none;
     }
     .bottom-nav {
       position: fixed;
@@ -97,31 +104,30 @@
 <div class="container">
   <h2>Invite and Earn</h2>
 
-  <div class="referral-box" id="referralLink">Generating your link...</div>
-  <button class="copy-btn" onclick="copyLink()">Copy Link</button>
-  <div class="success" id="copyMsg">✅ Link copied to clipboard!</div>
+  <div class="referral-box">
+    <input type="text" id="referralLink" class="referral-input" readonly />
+    <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+    <div class="success" id="copyMsg">✅ Link copied to clipboard!</div>
+  </div>
 
   <div class="guidelines">
-    <h3>Referral Earnings Explained:</h3>
+    <h3>💰 How Referral Bonus Works</h3>
     <ul>
-      <li>Earn <strong>20%</strong> of your referral’s monthly group payment — only if their group gets approved and qualifies for monthly payment.</li>
-      <li>Your referral bonus is <strong>automatic</strong> every time they receive their salary.</li>
-      <li>No limits: Invite as many as you want, and earn from each one monthly.</li>
+      <li>You earn <strong>20%</strong> of your referral’s monthly earnings — if they create a group that qualifies for payment.</li>
+      <li>Your bonus is paid <strong>automatically</strong> every time they are paid.</li>
     </ul>
 
-    <h3>Keep Earning More:</h3>
+    <h3>📈 Keep Earning Consistently</h3>
     <ul>
-      <li>Keep guiding your referrals on how to grow their groups to payment levels.</li>
-      <li>Ensure they maintain active and valid WhatsApp groups.</li>
-      <li>Encourage them to meet the required member count every month.</li>
-      <li>Use your story and success to motivate them.</li>
+      <li>Guide your referrals to reach required group member targets every month.</li>
+      <li>Encourage them to stay active and avoid disqualification.</li>
+      <li>The more they earn, the more you earn — automatically, every month.</li>
     </ul>
 
-    <h3>Smart Tips:</h3>
+    <h3>🚀 Smart Tips</h3>
     <ul>
-      <li>Target people who manage large groups or influencers.</li>
-      <li>Follow up on your referrals and help them set up their group fast.</li>
-      <li>Check your account for bonus payments regularly.</li>
+      <li>Target influencers or active group admins.</li>
+      
     </ul>
   </div>
 </div>
@@ -129,19 +135,24 @@
 <!-- Bottom Navigation -->
 <nav class="bottom-nav">
   <a href="index.html" class="nav-item">
-    <i class="fas fa-home"></i> Home
+    <i class="fas fa-home"></i>
+    Home
   </a>
   <a href="groups.html" class="nav-item">
-    <i class="fas fa-users"></i> Groups
+    <i class="fas fa-users"></i>
+    Groups
   </a>
   <a href="team.html" class="nav-item active">
-    <i class="fas fa-user-friends"></i> Team
+    <i class="fas fa-user-friends"></i>
+    Team
   </a>
   <a href="account.html" class="nav-item">
-    <i class="fas fa-user"></i> Account
+    <i class="fas fa-user"></i>
+    Account
   </a>
 </nav>
 
+<!-- Firebase and logic -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -161,16 +172,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const referralLinkEl = document.getElementById("referralLink");
-
-  function copyLink() {
-    navigator.clipboard.writeText(referralLinkEl.textContent).then(() => {
-      document.getElementById("copyMsg").style.display = "block";
-      setTimeout(() => {
-        document.getElementById("copyMsg").style.display = "none";
-      }, 3000);
-    });
-  }
+  const referralInput = document.getElementById("referralLink");
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -185,11 +187,27 @@
       const userData = snapshot.docs[0].data();
       const phone = userData.phone;
       const referralLink = `${window.location.origin}/signup.html?ref=${phone}`;
-      referralLinkEl.textContent = referralLink;
+      referralInput.value = referralLink;
     } else {
-      referralLinkEl.textContent = "Error: User not found.";
+      referralInput.value = "Error: User not found.";
     }
   });
 </script>
+
+<script>
+  function copyLink() {
+    const input = document.getElementById("referralLink");
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile
+    document.execCommand("copy");
+
+    const msg = document.getElementById("copyMsg");
+    msg.style.display = "block";
+    setTimeout(() => {
+      msg.style.display = "none";
+    }, 3000);
+  }
+</script>
+
 </body>
 </html>
