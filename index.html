@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GroupFill - Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #007B55;
+      --primary-dark: #005f40;
+      --secondary: #4e54c8;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --dark: #343a40;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f1f5f9;
+      color: #333;
+      line-height: 1.6;
+      padding-bottom: 70px;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    /* Header Styles */
+    header {
+      background-color: white;
+      padding: 15px 0;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    
+    .logo i {
+      font-size: 1.8rem;
+    }
+    
+    .account-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .balance-card {
+      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .balance-card h3 {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin: 0 0 5px;
+    }
+    
+    .balance-card .amount {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    
+    .btn {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 16px;
+      width: 100%;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    /* Main Content */
+    main {
+      padding: 10px 0;
+    }
+    
+    .section-title {
+      font-size: 1.3rem;
+      color: var(--dark);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+    }
+    
+    .section-title i {
+      color: var(--primary);
+    }
+    
+    .section-card {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    /* Group Announcements */
+    .group-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .group-card {
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: var(--transition);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    
+    .group-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.08);
+    }
+    
+    .group-header {
+      background-color: var(--primary);
+      color: white;
+      padding: 12px;
+    }
+    
+    .group-body {
+      padding: 15px;
+    }
+    
+    .group-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    
+    .group-desc {
+      color: var(--gray);
+      font-size: 0.95rem;
+      margin-bottom: 15px;
+      height: 60px;
+      overflow: hidden;
+    }
+    
+    .group-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn-sm {
+      padding: 8px 15px;
+      font-size: 0.85rem;
+      flex: 1;
+      text-align: center;
+    }
+    
+    .btn-desc {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+    
+    .btn-desc:hover {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .show-more {
+      text-align: center;
+      margin-top: 15px;
+    }
+    
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ced4da;
+      font-size: 1rem;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    /* Table Styles */
+    .payment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    
+    .payment-table th,
+    .payment-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .payment-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .payment-table tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    /* Instructions */
+    .instructions {
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      font-size: 0.95rem;
+    }
+    
+    .instructions ol {
+      padding-left: 20px;
+    }
+    
+    .instructions li {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--gray);
+      text-decoration: none;
+      transition: var(--transition);
+      padding: 5px;
+      flex: 1;
+    }
+    
+    .nav-item.active {
+      color: var(--primary);
+    }
+    
+    .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 3px;
+    }
+    
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background-color: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      overflow: hidden;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+    
+    .modal-header {
+      background-color: var(--primary);
+      color: white;
+      padding: 15px;
+      position: relative;
+    }
+    
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-body {
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    
+    .modal-footer {
+      padding: 15px;
+      text-align: right;
+      border-top: 1px solid #e9ecef;
+    }
+    
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .status-active {
+      background-color: #e6f7ee;
+      color: #007B55;
+    }
+    
+    .status-dormant {
+      background-color: #fef3e6;
+      color: #f59e0b;
+    }
+  </style>
+</head>
+
+
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <i class="fas fa-users"></i>
+        <span>GroupFill</span>
+      </div>
+
+      <div class="account-summary">
+        <div class="balance-card">
+          <h3>Account Balance</h3>
+          <div class="amount" id="accountBalance">UGX 2,000</div>
+        </div>
+        
+        <div class="balance-card">
+          <h3>Total Withdrawn</h3>
+          <div class="amount" id="totalWithdrawn">UGX 0</div>
+        </div>
+        
+        <button id="withdrawBtn" class="btn btn-primary">
+          <i class="fas fa-money-bill-wave"></i>
+          Withdraw Funds
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Groups to Create Section -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-plus-circle"></i>
+        Groups to Create
+      </h2>
+      
+      <div class="group-grid" id="announcementsGrid">
+        <!-- Group cards will be populated here -->
+      </div>
+      
+      <div class="show-more" id="showMoreContainer">
+        <button class="btn btn-primary" id="showMoreBtn">
+          <i class="fas fa-chevron-down"></i>
+          Show More Groups
+        </button>
+      </div>
+    </section>
+    
+    <!-- Submit Group Form -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-paper-plane"></i>
+        Submit Your Group
+      </h2>
+      
+      <form id="groupForm">
+        <div class="form-group">
+          <label for="groupPhone">Phone Number</label>
+          <input type="text" id="groupPhone" class="form-control" placeholder="Your phone number" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="groupType">Group Type</label>
+          <select id="groupType" class="form-control" required>
+            <option value="">Select type</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="telegram">Telegram</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="groupLink">Group Link</label>
+          <input type="url" id="groupLink" class="form-control" placeholder="https://your-group-link" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-check-circle"></i>
+          Submit Group
+        </button>
+      </form>
+    </section>
+    
+    <!-- Payment Table -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-money-bill-wave"></i>
+        Monthly Payment Rates
+      </h2>
+      
+      <div class="table-responsive">
+        <table class="payment-table">
+          <thead>
+            <tr>
+              <th>Members</th>
+              <th>Type</th>
+              <th>Monthly Income</th>
+            </tr>
+          </thead>
+          <tbody id="paymentTableBody">
+            <!-- Payment rows will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+    
+    <!-- Instructions -->
+    <section class="instructions">
+      <h3 style="margin-bottom: 15px; color: var(--primary);">Important Instructions</h3>
+      <ol>
+        <li>We pay after reaching the exact number of members as specified in the payment table.</li>
+        <li>The group should remain on topic according to the group name and description provided.</li>
+        <li>You are responsible for coordination, adding/removing members, and introducing content for the group.</li>
+        <li>Monthly salary is automatically added to your account at the end of each month.</li>
+        <li>The group name and description must match exactly with what's announced by GroupFill.</li>
+        <li>For any questions, contact customer care through your account page.</li>
+        <li>Groups must remain active with regular engagement to qualify for payments.</li>
+        <li>Payment currency is determined by your country during registration.</li>
+      </ol>
+    </section>
+  </main>
+  
+  <!-- Group Detail Modal -->
+  <div class="modal" id="groupModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalGroupTitle">Group Title</h3>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4>Description:</h4>
+        <p id="modalGroupDesc">Group description will appear here.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="visitWebsiteBtn">
+          <i class="fas fa-globe"></i>
+          Visit Website
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item active">
+      <i class="fas fa-home"></i>
+      Home
+    </a>
+    <a href="groups.html" class="nav-item">
+      <i class="fas fa-users"></i>
+      Groups
+    </a>
+    <a href="team.html" class="nav-item">
+      <i class="fas fa-user-friends"></i>
+      Team
+    </a>
+    <a href="account.html" class="nav-item">
+      <i class="fas fa-user"></i>
+      Account
+    </a>
+  </nav>
+  
+
+  <script>
+    // Sample data for group announcements (from grouptofill collection)
+    const groupToFill = [
+      {
+        id: "SatbS4iMw5jOE8rZEjLH",
+        grouptitle: "OBlinks",
+        description: "We want a nice group for online business enthusiasts to share ideas and opportunities.",
+        website: "https://onlinemarket-ug.com"
+      },
+      {
+        id: "SatbS4iMw5jOE8rZEjL2",
+        grouptitle: "Digital Marketing Hub",
+        description: "Create a group for digital marketers to discuss strategies, tools, and trends in the industry.",
+        website: "https://digitalmarketinghub.com"
+      },
+      {
+        id: "SatbS4iMw5jOE8rZEjL3",
+        grouptitle: "E-commerce Sellers",
+        description: "We need a group for e-commerce sellers to share experiences and growth strategies.",
+        website: "https://ecomcommunity.com"
+      },
+      {
+        id: "SatbS4iMw5jOE8rZEjL4",
+        grouptitle: "Freelancers Network",
+        description: "Create a networking group for freelancers to find opportunities and share resources.",
+        website: "https://freelancenet.org"
+      },
+      {
+        id: "SatbS4iMw5jOE8rZEjL5",
+        grouptitle: "Tech Innovators",
+        description: "We need a group for technology enthusiasts to discuss innovations and emerging technologies.",
+        website: "https://techinnovators.io"
+      }
+    ];
+    
+    // Payment rates based on country
+    const paymentRates = {
+      Uganda: {
+        currency: "UGX",
+        whatsapp: [10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000],
+        telegram: [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000]
+      },
+      Tanzania: {
+        currency: "TZS",
+        whatsapp: [13200, 26400, 39600, 52800, 66000, 79200, 92400, 105600, 118800, 132000],
+        telegram: [6600, 13200, 19800, 26400, 33000, 39600, 46200, 52800, 59400, 66000]
+      },
+      Nigeria: {
+        currency: "NGN",
+        whatsapp: [800, 1600, 2400, 3200, 4000, 4800, 5600, 6400, 7200, 8000],
+        telegram: [400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
+      },
+      Ghana: {
+        currency: "GHS",
+        whatsapp: [6.4, 12.8, 19.2, 25.6, 32.0, 38.4, 44.8, 51.2, 57.6, 64.0],
+        telegram: [3.2, 6.4, 9.6, 12.8, 16.0, 19.2, 22.4, 25.6, 28.8, 32.0]
+      }
+    };
+    
+    // Assume user data (in a real app, this would come from Firebase)
+    const userData = {
+      name: "Byzmukarta Mojaya",
+      email: "byzmukadman@uygd.mo@t",
+      phone: "07618288@w6",
+      country: "Uganda",
+      accountBalance: 2000,
+      totalWithdrawn: 0,
+      currency: "UGX",
+      userId: "13XWe9W8Q4yJy8v7@m"
+    };
+    
+    // DOM Elements
+    const accountBalanceEl = document.getElementById('accountBalance');
+    const totalWithdrawnEl = document.getElementById('totalWithdrawn');
+    const announcementsGrid = document.getElementById('announcementsGrid');
+    const showMoreBtn = document.getElementById('showMoreBtn');
+    const showMoreContainer = document.getElementById('showMoreContainer');
+    const paymentTableBody = document.getElementById('paymentTableBody');
+    const groupForm = document.getElementById('groupForm');
+    const groupModal = document.getElementById('groupModal');
+    const modalGroupTitle = document.getElementById('modalGroupTitle');
+    const modalGroupDesc = document.getElementById('modalGroupDesc');
+    const visitWebsiteBtn = document.getElementById('visitWebsiteBtn');
+    const closeModal = document.getElementById('closeModal');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    
+    // Groups collection (simulated)
+    const groupsCollection = [];
+    
+    // Initialize the page
+    function initPage() {
+      // Set account balances
+      accountBalanceEl.textContent = `${userData.currency} ${userData.accountBalance.toLocaleString()}`;
+      totalWithdrawnEl.textContent = `${userData.currency} ${userData.totalWithdrawn.toLocaleString()}`;
+      
+      // Render initial groups (first 2)
+      renderGroups(0, 2);
+      
+      // Render payment table
+      renderPaymentTable();
+      
+      // Setup event listeners
+      setupEventListeners();
+    }
+    
+    // Render group announcements
+    function renderGroups(start, end) {
+      const groupsToShow = groupToFill.slice(start, end);
+      
+      groupsToShow.forEach(group => {
+        const groupCard = document.createElement('div');
+        groupCard.className = 'group-card';
+        groupCard.innerHTML = `
+          <div class="group-header">
+            <h3 class="group-title">${group.grouptitle}</h3>
+          </div>
+          <div class="group-body">
+            <p class="group-desc">${group.description}</p>
+            <div class="group-actions">
+              <button class="btn btn-desc btn-sm view-details" data-id="${group.id}">
+                <i class="fas fa-info-circle"></i> Description
+              </button>
+              <button class="btn btn-primary btn-sm visit-website" data-website="${group.website}">
+                <i class="fas fa-external-link-alt"></i> Website
+              </button>
+            </div>
+          </div>
+        `;
+        announcementsGrid.appendChild(groupCard);
+      });
+      
+      // Show/hide "Show More" button
+      const shownGroups = announcementsGrid.children.length;
+      if (shownGroups >= groupToFill.length) {
+        showMoreContainer.style.display = 'none';
+      } else {
+        showMoreContainer.style.display = 'block';
+      }
+    }
+    
+    // Render payment table based on user's country
+    function renderPaymentTable() {
+      const countryData = paymentRates[userData.country] || paymentRates.Uganda;
+      const currencySymbol = countryData.currency;
+      
+      paymentTableBody.innerHTML = '';
+      
+      for (let i = 0; i < 10; i++) {
+        const members = (i + 1) * 100;
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+          <td>${members}</td>
+          <td>WhatsApp</td>
+          <td>${currencySymbol} ${countryData.whatsapp[i].toLocaleString()}</td>
+        `;
+        paymentTableBody.appendChild(row);
+        
+        const telegramRow = document.createElement('tr');
+        telegramRow.innerHTML = `
+          <td>${members}</td>
+          <td>Telegram</td>
+          <td>${currencySymbol} ${countryData.telegram[i].toLocaleString()}</td>
+        `;
+        paymentTableBody.appendChild(telegramRow);
+      }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Show more groups
+      showMoreBtn.addEventListener('click', () => {
+        const currentCount = announcementsGrid.children.length;
+        renderGroups(currentCount, currentCount + 2);
+      });
+      
+      // Group form submission
+      groupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const phone = document.getElementById('groupPhone').value;
+        const type = document.getElementById('groupType').value;
+        const link = document.getElementById('groupLink').value;
+        
+        // Create group object
+        const newGroup = {
+          groupId: `GRP-${Date.now()}`,
+          phone: phone,
+          type: type,
+          link: link,
+          userId: userData.userId,
+          totalMembers: 0,
+          members: [],
+          lastPaidOn: null,
+          amountPaid: 0,
+          status: "active",
+          createdAt: new Date().toISOString()
+        };
+        
+        // Add to groups collection (simulated Firestore)
+        groupsCollection.push(newGroup);
+        
+        // Show success message
+        alert(`Group submitted successfully!\n\nGroup ID: ${newGroup.groupId}\nStatus: Active`);
+        groupForm.reset();
+      });
+      
+      // Modal close button
+      closeModal.addEventListener('click', () => {
+        groupModal.style.display = 'none';
+      });
+      
+      // Withdraw button
+      withdrawBtn.addEventListener('click', () => {
+        window.location.href = 'withdraw.html';
+      });
+      
+      // Click outside modal to close
+      window.addEventListener('click', (e) => {
+        if (e.target === groupModal) {
+          groupModal.style.display = 'none';
+        }
+      });
+      
+      // Delegated event for group details buttons
+      announcementsGrid.addEventListener('click', (e) => {
+        // Description button
+        if (e.target.closest('.view-details')) {
+          const btn = e.target.closest('.view-details');
+          const groupId = btn.dataset.id;
+          showGroupDetails(groupId);
+        }
+        
+        // Website button
+        if (e.target.closest('.visit-website')) {
+          const btn = e.target.closest('.visit-website');
+          const website = btn.dataset.website;
+          window.open(website, '_blank');
+        }
+      });
+    }
+    
+    // Show group details in modal
+    function showGroupDetails(groupId) {
+      const group = groupToFill.find(g => g.id === groupId);
+      
+      if (group) {
+        modalGroupTitle.textContent = group.grouptitle;
+        modalGroupDesc.textContent = group.description;
+        visitWebsiteBtn.onclick = () => window.open(group.website, '_blank');
+        groupModal.style.display = 'flex';
+      }
+    }
+    
+    // Initialize the page when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>
