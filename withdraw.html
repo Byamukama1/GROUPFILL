@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Withdraw - GroupFill</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    h2 {
+      text-align: center;
+      color: #007B55;
+      margin-bottom: 20px;
+    }
+    .note {
+      background: #e8f5e9;
+      padding: 10px;
+      border-left: 4px solid #007B55;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 6px;
+    }
+    button {
+      width: 100%;
+      background: #007B55;
+      color: white;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00563a;
+    }
+    .error, .success {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .error { background: #f8d7da; color: #721c24; }
+    .success { background: #d4edda; color: #155724; }
+    ul { padding-left: 18px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Request Withdrawal</h2>
+
+  <div class="note">
+    <strong>Minimum Withdrawals:</strong>
+    <ul>
+      <li>Uganda 🇺🇬 – UGX 5,000</li>
+      <li>Ghana 🇬🇭 – GHS 10</li>
+      <li>Nigeria 🇳🇬 – NGN 2,000</li>
+      <li>Tanzania 🇹🇿 – TZS 4,000</li>
+    </ul>
+  </div>
+
+  <label for="withdrawPhone">Number to Receive Money</label>
+  <input type="text" id="withdrawPhone" placeholder="e.g. 0701234567" />
+
+  <label for="withdrawAmount">Amount to Withdraw</label>
+  <input type="number" id="withdrawAmount" placeholder="Enter amount" />
+
+  <button onclick="submitWithdrawal()">Submit Withdrawal</button>
+
+  <div class="error" id="errorMsg"></div>
+  <div class="success" id="successMsg">✅ Withdrawal request submitted successfully!</div>
+
+  <div class="note" style="margin-top: 30px;">
+    <strong>Note:</strong><br>
+    Withdraws are <strong>automatic</strong>. When requested, the system immediately deducts the amount from your account balance.<br>
+    It will be processed shortly.
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+    authDomain: "groupfill-da470.firebaseapp.com",
+    projectId: "groupfill-da470",
+    storageBucket: "groupfill-da470.firebasestorage.app",
+    messagingSenderId: "951496844264",
+    appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d",
+    measurementId: "G-WWF4HHSGFV"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null;
+  let userDocId = null;
+  let accountBalance = 0;
+  let country = "Uganda";
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = "signup.html";
+      return;
+    }
+
+    const q = await db.collection("users").where("userId", "==", user.uid).get();
+    if (!q.empty) {
+      const doc = q.docs[0];
+      currentUser = doc.data();
+      userDocId = doc.id;
+      accountBalance = currentUser.accountBalance || 0;
+      country = currentUser.country || "Uganda";
+    }
+  });
+
+  function getMinimumWithdraw(country) {
+    switch (country) {
+      case "Ghana": return 10;
+      case "Nigeria": return 2000;
+      case "Tanzania": return 4000;
+      default: return 5000;
+    }
+  }
+
+  async function submitWithdrawal() {
+    const phone = document.getElementById("withdrawPhone").value.trim();
+    const amount = parseFloat(document.getElementById("withdrawAmount").value);
+    const errorMsg = document.getElementById("errorMsg");
+    const successMsg = document.getElementById("successMsg");
+    errorMsg.style.display = "none";
+    successMsg.style.display = "none";
+
+    if (!phone || isNaN(amount) || amount <= 0) {
+      errorMsg.textContent = "Please fill in valid phone number and amount.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    const minWithdraw = getMinimumWithdraw(country);
+    if (amount < minWithdraw) {
+      errorMsg.textContent = `Minimum withdrawal in ${country} is ${minWithdraw}.`;
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    if (amount > accountBalance) {
+      errorMsg.textContent = `Insufficient balance. You have only ${accountBalance}.`;
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    try {
+      await db.collection("withdraws").add({
+        userId: currentUser.userId,
+        phone,
+        amount,
+        country,
+        createdAt: new Date(),
+        status: "pending"
+      });
+
+      // Deduct balance
+      await db.collection("users").doc(userDocId).update({
+        accountBalance: firebase.firestore.FieldValue.increment(-amount)
+      });
+
+      successMsg.style.display = "block";
+      document.getElementById("withdrawPhone").value = "";
+      document.getElementById("withdrawAmount").value = "";
+    } catch (err) {
+      errorMsg.textContent = "Failed to submit. Try again.";
+      errorMsg.style.display = "block";
+      console.error(err);
+    }
+  }
+</script>
+
+</body>
+</html>
