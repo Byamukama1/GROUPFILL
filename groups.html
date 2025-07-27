@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Group Members</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f1f5f9;
+      padding: 20px;
+      color: #333;
+    }
+    .group-card {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .group-card h3 {
+      margin-bottom: 10px;
+      color: #007B55;
+    }
+    .info-row {
+      margin-bottom: 8px;
+    }
+    .form-group {
+      margin-top: 10px;
+    }
+    .form-group input {
+      padding: 8px;
+      width: 60%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .form-group button {
+      padding: 8px 12px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #007B55;
+      color: white;
+      cursor: pointer;
+    }
+    .form-group button:hover {
+      background: #00563a;
+    }
+    .member-list {
+      margin-top: 15px;
+      display: none;
+    }
+    .member-list.active {
+      display: block;
+    }
+    .member-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .search-bar {
+      margin-bottom: 10px;
+    }
+    .search-bar input {
+      padding: 8px;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Your Groups</h2>
+  <div id="groupsContainer"></div>
+
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
+    authDomain: "oblinks-7fdb1.firebaseapp.com",
+    projectId: "oblinks-7fdb1",
+    storageBucket: "oblinks-7fdb1.appspot.com",
+    messagingSenderId: "587017639779",
+    appId: "1:587017639779:web:d11b60f40f431cfc202556"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  const container = document.getElementById("groupsContainer");
+
+  // Normalize phone numbers
+  function normalizePhone(phone) {
+    return phone.replace(/^\+?256|^0/, "256");
+  }
+
+  // Render a group card
+  function renderGroup(groupDoc) {
+    const group = groupDoc.data();
+    const div = document.createElement("div");
+    div.className = "group-card";
+    div.innerHTML = `
+      <h3>${group.type.toUpperCase()} Group</h3>
+      <div class="info-row">Link: <input type="text" value="${group.link}" /></div>
+      <div class="info-row">Total Members: <span class="total-members">${group.totalMembers || 0}</span></div>
+      <div class="info-row">Status: ${group.status}</div>
+      <div class="info-row">Amount Paid: UGX ${group.amountPaid}</div>
+      <div class="info-row">Last Paid On: ${group.lastPaidOn || 'N/A'}</div>
+
+      <div class="form-group">
+        <input type="text" placeholder="Add phone number" class="phone-input" />
+        <button class="add-btn">Submit</button>
+        <button class="list-btn">List</button>
+      </div>
+
+      <div class="member-list">
+        <div class="search-bar">
+          <input type="text" placeholder="Search number..." class="search-input" />
+        </div>
+        <div class="members-container"></div>
+      </div>
+    `;
+
+    const phoneInput = div.querySelector(".phone-input");
+    const addBtn = div.querySelector(".add-btn");
+    const listBtn = div.querySelector(".list-btn");
+    const membersList = div.querySelector(".member-list");
+    const membersContainer = div.querySelector(".members-container");
+    const searchInput = div.querySelector(".search-input");
+    const totalMembersText = div.querySelector(".total-members");
+
+    let members = group.members || [];
+
+    addBtn.onclick = async () => {
+      const rawPhone = phoneInput.value.trim();
+      const normPhone = normalizePhone(rawPhone);
+      const exists = members.find(p => normalizePhone(p) === normPhone);
+      if (exists) return alert("Number already exists in this group");
+      members.push(rawPhone);
+      await db.collection("groups").doc(groupDoc.id).update({
+        members,
+        totalMembers: members.length
+      });
+      totalMembersText.textContent = members.length;
+      alert("Member added");
+      phoneInput.value = "";
+    };
+
+    listBtn.onclick = () => {
+      membersList.classList.toggle("active");
+      updateMemberList();
+    };
+
+    function updateMemberList(filter = "") {
+      membersContainer.innerHTML = "";
+      members.filter(num => num.includes(filter)).forEach((num, i) => {
+        const item = document.createElement("div");
+        item.className = "member-item";
+        item.innerHTML = `
+          <span>${num}</span>
+          <i class="fas fa-trash" style="cursor:pointer;color:red" data-index="${i}"></i>
+        `;
+        membersContainer.appendChild(item);
+      });
+    }
+
+    membersContainer.onclick = async (e) => {
+      if (e.target.classList.contains("fa-trash")) {
+        const index = +e.target.dataset.index;
+        members.splice(index, 1);
+        await db.collection("groups").doc(groupDoc.id).update({
+          members,
+          totalMembers: members.length
+        });
+        totalMembersText.textContent = members.length;
+        updateMemberList(searchInput.value);
+      }
+    };
+
+    searchInput.oninput = () => {
+      updateMemberList(searchInput.value.trim());
+    };
+
+    container.appendChild(div);
+  }
+
+  // ✅ Get groups for logged-in user
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      db.collection("groups").where("userId", "==", user.uid).get().then(snapshot => {
+        if (snapshot.empty) {
+          container.innerHTML = "<p>No groups found for your account.</p>";
+        } else {
+          snapshot.forEach(doc => renderGroup(doc));
+        }
+      });
+    } else {
+      container.innerHTML = "<p>Please log in to view your groups.</p>";
+    }
+  });
+</script>
+</body>
+</html>
