@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Team - GroupFill</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+    }
+    h2 {
+      color: #007B55;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .referral-box {
+      background: #e8f5e9;
+      border: 1px solid #b2dfdb;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 20px 0;
+      word-break: break-all;
+    }
+    .copy-btn {
+      margin-top: 10px;
+      background: #007B55;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .guidelines {
+      margin-top: 30px;
+    }
+    .guidelines h3 {
+      color: #007B55;
+      margin-bottom: 10px;
+    }
+    .guidelines ul {
+      padding-left: 20px;
+    }
+    .guidelines li {
+      margin-bottom: 10px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-decoration: none;
+    }
+    .nav-item.active {
+      color: #007B55;
+    }
+    .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Invite and Earn</h2>
+
+  <div class="referral-box" id="referralLink">Generating your link...</div>
+  <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+  <div class="success" id="copyMsg">✅ Link copied to clipboard!</div>
+
+  <div class="guidelines">
+    <h3>Referral Earnings Explained:</h3>
+    <ul>
+      <li>Earn <strong>20%</strong> of your referral’s monthly group payment — only if their group gets approved and qualifies for monthly payment.</li>
+      <li>Your referral bonus is <strong>automatic</strong> every time they receive their salary.</li>
+      <li>No limits: Invite as many as you want, and earn from each one monthly.</li>
+    </ul>
+
+    <h3>Keep Earning More:</h3>
+    <ul>
+      <li>Keep guiding your referrals on how to grow their groups to payment levels.</li>
+      <li>Ensure they maintain active and valid WhatsApp groups.</li>
+      <li>Encourage them to meet the required member count every month.</li>
+      <li>Use your story and success to motivate them.</li>
+    </ul>
+
+    <h3>Smart Tips:</h3>
+    <ul>
+      <li>Target people who manage large groups or influencers.</li>
+      <li>Follow up on your referrals and help them set up their group fast.</li>
+      <li>Check your account for bonus payments regularly.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <i class="fas fa-home"></i> Home
+  </a>
+  <a href="groups.html" class="nav-item">
+    <i class="fas fa-users"></i> Groups
+  </a>
+  <a href="team.html" class="nav-item active">
+    <i class="fas fa-user-friends"></i> Team
+  </a>
+  <a href="account.html" class="nav-item">
+    <i class="fas fa-user"></i> Account
+  </a>
+</nav>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+    authDomain: "groupfill-da470.firebaseapp.com",
+    projectId: "groupfill-da470",
+    storageBucket: "groupfill-da470.firebasestorage.app",
+    messagingSenderId: "951496844264",
+    appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d",
+    measurementId: "G-WWF4HHSGFV"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const referralLinkEl = document.getElementById("referralLink");
+
+  function copyLink() {
+    navigator.clipboard.writeText(referralLinkEl.textContent).then(() => {
+      document.getElementById("copyMsg").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("copyMsg").style.display = "none";
+      }, 3000);
+    });
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "signup.html";
+      return;
+    }
+
+    const q = query(collection(db, "users"), where("userId", "==", user.uid));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const userData = snapshot.docs[0].data();
+      const phone = userData.phone;
+      const referralLink = `${window.location.origin}/signup.html?ref=${phone}`;
+      referralLinkEl.textContent = referralLink;
+    } else {
+      referralLinkEl.textContent = "Error: User not found.";
+    }
+  });
+</script>
+</body>
+</html>
