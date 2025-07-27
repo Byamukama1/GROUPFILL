@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Group Fill - Sign Up</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f1f5f9;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    form {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+    }
+    h2 {
+      text-align: center;
+      color: #007B55;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 600;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    input:disabled {
+      background-color: #f0f0f0;
+    }
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 14px;
+      background: #007B55;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #005f40;
+    }
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 15px;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<form id="signupForm">
+  <h2>Create Your Group Fill Account</h2>
+
+  <label for="name">Full Name</label>
+  <input type="text" id="name" required />
+
+  <label for="email">Email Address</label>
+  <input type="email" id="email" required />
+
+  <label for="country">Country</label>
+  <select id="country" required>
+    <option value="">-- Select Country --</option>
+    <option value="Uganda">Uganda</option>
+    <option value="Ghana">Ghana</option>
+    <option value="Nigeria">Nigeria</option>
+    <option value="Tanzania">Tanzania</option>
+  </select>
+
+  <label for="phone">Phone Number</label>
+  <input type="text" id="phone" required disabled />
+  <div id="phoneError" class="error">Invalid phone number for selected country</div>
+
+  <label for="password">Password</label>
+  <input type="password" id="password" required minlength="6" />
+
+  <label for="confirmPassword">Confirm Password</label>
+  <input type="password" id="confirmPassword" required />
+  <div id="confirmError" class="error">Passwords do not match</div>
+
+  <button type="submit">Sign Up & Claim Bonus</button>
+
+  <div class="footer">
+    &copy; 2025 Group Fill | groupfill.org
+  </div>
+</form>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+    authDomain: "groupfill-da470.firebaseapp.com",
+    projectId: "groupfill-da470",
+    storageBucket: "groupfill-da470.firebasestorage.app",
+    messagingSenderId: "951496844264",
+    appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d",
+    measurementId: "G-WWF4HHSGFV"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const referrerPhone = urlParams.get("ref") || "";
+
+  const phoneInput = document.getElementById("phone");
+  const countrySelect = document.getElementById("country");
+  const phoneError = document.getElementById("phoneError");
+  const confirmError = document.getElementById("confirmError");
+
+  function isValidPrefix(phone, country) {
+    if (phone.length < 2) return true;
+    switch (country) {
+      case "Uganda":
+        return /^07/.test(phone);
+      case "Ghana":
+        return /^(05|02)/.test(phone);
+      case "Nigeria":
+        return /^(070|080|081|090|091)/.test(phone);
+      case "Tanzania":
+        return /^(06|07)/.test(phone);
+      default:
+        return false;
+    }
+  }
+
+  function isValidFullNumber(phone, country) {
+    switch (country) {
+      case "Uganda":
+        return /^07\d{8}$/.test(phone);
+      case "Ghana":
+        return /^(05|02)\d{8}$/.test(phone);
+      case "Nigeria":
+        return /^(070|080|081|090|091)\d{8}$/.test(phone);
+      case "Tanzania":
+        return /^(06|07)\d{8}$/.test(phone);
+      default:
+        return false;
+    }
+  }
+
+  function showPhoneError(show) {
+    phoneError.style.display = show ? "block" : "none";
+  }
+
+  function showConfirmError(show) {
+    confirmError.style.display = show ? "block" : "none";
+  }
+
+  countrySelect.addEventListener("change", () => {
+    phoneInput.disabled = !countrySelect.value;
+    phoneInput.value = "";
+    showPhoneError(false);
+  });
+
+  phoneInput.addEventListener("input", () => {
+    const phone = phoneInput.value;
+    const country = countrySelect.value;
+    if (!country || phone.length < 2) return showPhoneError(false);
+    showPhoneError(!isValidPrefix(phone, country));
+  });
+
+  const signupForm = document.getElementById("signupForm");
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = phoneInput.value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const country = countrySelect.value;
+
+    if (password !== confirmPassword) {
+      showConfirmError(true);
+      return;
+    } else {
+      showConfirmError(false);
+    }
+
+    if (!isValidFullNumber(phone, country)) {
+      showPhoneError(true);
+      return;
+    }
+
+    let accountBalance = 0;
+    switch (country) {
+      case "Uganda": accountBalance = 2000; break;
+      case "Tanzania": accountBalance = 1320; break;
+      case "Nigeria": accountBalance = 800; break;
+      case "Ghana": accountBalance = 6.4; break;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
+
+      await addDoc(collection(db, "users"), {
+        userId,
+        name,
+        email,
+        phone,
+        country,
+        accountBalance,
+        totalwithdrawn: 0,
+        grouplinks: [],
+        referrerPhone,
+        createdAt: serverTimestamp()
+      });
+
+      alert(`🎉 Account created! You received a bonus of ${accountBalance} ${country === 'Ghana' ? 'GHS' : country === 'Tanzania' ? 'TZS' : country === 'Nigeria' ? 'NGN' : 'UGX'}.`);
+      signupForm.reset();
+      window.location.href = "index.html";
+    } catch (error) {
+      console.error("Signup Error:", error);
+      alert("❌ " + error.message);
+    }
+  });
+</script>
+
+</body>
+</html>
