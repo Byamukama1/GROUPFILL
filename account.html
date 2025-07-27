@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account - GroupFill</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 0 0 80px; /* space for bottom nav */
+    }
+    .container {
+      max-width: 500px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    h2 {
+      text-align: center;
+      color: #007B55;
+      margin-bottom: 20px;
+    }
+    .info {
+      margin-bottom: 15px;
+    }
+    .info label {
+      font-weight: bold;
+      color: #333;
+      display: block;
+    }
+    .info span, .info input {
+      display: block;
+      font-size: 16px;
+      margin-top: 5px;
+      width: 100%;
+    }
+    .info input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      display: none;
+    }
+    .btn {
+      display: block;
+      margin: 10px 0;
+      padding: 12px;
+      text-align: left;
+      background: #007B55;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: #005f40;
+    }
+    .save-btn {
+      background: #4e54c8;
+      display: none;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0;
+      z-index: 1000;
+    }
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      text-decoration: none;
+      color: #007B55;
+      font-size: 14px;
+    }
+    .bottom-nav a i {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>GroupFill</h2>
+
+    <div class="info">
+      <label>Name:</label>
+      <span id="userName"></span>
+      <input type="text" id="editName" />
+    </div>
+
+    <div class="info">
+      <label>Email:</label>
+      <span id="userEmail"></span>
+      <input type="email" id="editEmail" />
+    </div>
+
+    <div class="info">
+      <label>Phone:</label>
+      <span id="userPhone"></span>
+      <input type="text" id="editPhone" />
+    </div>
+
+    <div class="info">
+      <label>Country:</label>
+      <span id="userCountry"></span>
+    </div>
+
+    <button class="btn" onclick="enableEdit()">Edit Profile</button>
+    <button class="btn save-btn" id="saveBtn" onclick="saveProfile()">Save Changes</button>
+
+    <a class="btn" href="createMeGroups.html">Create Me Groups</a>
+    <a class="btn" href="https://t.me/+256783472017" target="_blank">
+      <i class="fab fa-telegram-plane"></i> Customer Care
+    </a>
+    <a class="btn" href="https://t.me/+gA04WRwbA6s0YWQ0" target="_blank">
+      <i class="fab fa-telegram"></i> Join Telegram Group
+    </a>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="index.html"><i class="fas fa-home"></i><br>Home</a>
+    <a href="groups.html"><i class="fas fa-users"></i><br>Groups</a>
+    <a href="team.html"><i class="fas fa-users-cog"></i><br>Team</a>
+    <a href="account.html"><i class="fas fa-user"></i><br>Account</a>
+  </div>
+
+  <!-- Firebase & Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+      authDomain: "groupfill-da470.firebaseapp.com",
+      projectId: "groupfill-da470",
+      storageBucket: "groupfill-da470.appspot.com",
+      messagingSenderId: "951496844264",
+      appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d",
+      measurementId: "G-WWF4HHSGFV"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userDocId;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const q = query(collection(db, "users"), where("userId", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          userDocId = querySnapshot.docs[0].id;
+          document.getElementById('userName').textContent = userData.name;
+          document.getElementById('userEmail').textContent = userData.email;
+          document.getElementById('userPhone').textContent = userData.phone;
+          document.getElementById('userCountry').textContent = userData.country;
+
+          document.getElementById('editName').value = userData.name;
+          document.getElementById('editEmail').value = userData.email;
+          document.getElementById('editPhone').value = userData.phone;
+        }
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    window.enableEdit = () => {
+      document.getElementById('editName').style.display = 'block';
+      document.getElementById('editEmail').style.display = 'block';
+      document.getElementById('editPhone').style.display = 'block';
+      document.getElementById('saveBtn').style.display = 'block';
+    }
+
+    window.saveProfile = async () => {
+      const newName = document.getElementById('editName').value.trim();
+      const newEmail = document.getElementById('editEmail').value.trim();
+      const newPhone = document.getElementById('editPhone').value.trim();
+
+      await updateDoc(doc(db, "users", userDocId), {
+        name: newName,
+        email: newEmail,
+        phone: newPhone
+      });
+
+      document.getElementById('userName').textContent = newName;
+      document.getElementById('userEmail').textContent = newEmail;
+      document.getElementById('userPhone').textContent = newPhone;
+
+      alert("Profile updated successfully!");
+      location.reload();
+    }
+  </script>
+</body>
+</html>
