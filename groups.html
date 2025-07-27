@@ -1,209 +1,772 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manage Group Members</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GroupFill - Manage Groups</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f1f5f9;
-      padding: 20px;
-      color: #333;
+    :root {
+      --primary: #007B55;
+      --primary-dark: #005f40;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --dark: #343a40;
+      --danger: #dc3545;
+      --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --transition: all 0.3s ease;
     }
-    .group-card {
-      background: #fff;
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f1f5f9;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    /* Header Styles */
+    header {
+      background-color: white;
       padding: 20px;
       margin-bottom: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .group-card h3 {
-      margin-bottom: 10px;
-      color: #007B55;
+    
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--primary);
     }
-    .info-row {
-      margin-bottom: 8px;
+    
+    .logo i {
+      font-size: 1.8rem;
     }
-    .form-group {
-      margin-top: 10px;
+    
+    .user-info {
+      text-align: right;
     }
-    .form-group input {
-      padding: 8px;
-      width: 60%;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    
+    .user-welcome {
+      font-weight: 600;
+      color: var(--dark);
     }
-    .form-group button {
-      padding: 8px 12px;
-      margin-left: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #007B55;
+    
+    .user-welcome span {
+      color: var(--primary);
+    }
+    
+    .account-balance {
+      margin-top: 5px;
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+    
+    .page-title {
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+      padding: 0 10px;
+    }
+    
+    /* Group Cards */
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    
+    .group-card {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    
+    .group-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .group-header {
+      background-color: var(--primary);
       color: white;
-      cursor: pointer;
+      padding: 15px;
     }
-    .form-group button:hover {
-      background: #00563a;
+    
+    .group-body {
+      padding: 20px;
     }
-    .member-list {
+    
+    .group-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+    
+    .group-info {
+      color: var(--gray);
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .group-info strong {
+      color: var(--dark);
+      min-width: 120px;
+      display: inline-block;
+    }
+    
+    .group-actions {
+      display: flex;
+      gap: 10px;
       margin-top: 15px;
-      display: none;
     }
-    .member-list.active {
-      display: block;
+    
+    .btn {
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      flex: 1;
     }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #bd2130;
+    }
+    
+    /* Member Management */
+    .member-management {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 1.4rem;
+      color: var(--dark);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .section-title i {
+      color: var(--primary);
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .form-control {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ced4da;
+      font-size: 1rem;
+    }
+    
+    .member-list {
+      margin-top: 25px;
+    }
+    
+    .search-bar {
+      display: flex;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+    
+    .search-bar input {
+      flex: 1;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #ced4da;
+      font-size: 1rem;
+    }
+    
     .member-item {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
+      padding: 12px 15px;
       border-bottom: 1px solid #eee;
+      align-items: center;
     }
-    .search-bar {
-      margin-bottom: 10px;
+    
+    .member-item:nth-child(odd) {
+      background-color: #f9f9f9;
     }
-    .search-bar input {
-      padding: 8px;
-      width: 100%;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    
+    .member-actions i {
+      cursor: pointer;
+      margin-left: 10px;
+      transition: var(--transition);
+    }
+    
+    .fa-trash-can {
+      color: var(--danger);
+    }
+    
+    .fa-trash-can:hover {
+      color: #bd2130;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--gray);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+    
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--gray);
+      text-decoration: none;
+      transition: var(--transition);
+      padding: 5px;
+      flex: 1;
+    }
+    
+    .nav-item.active {
+      color: var(--primary);
+    }
+    
+    .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 3px;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--primary);
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      text-align: center;
+      margin: 10px 0;
+      display: none;
     }
   </style>
 </head>
+
 <body>
-  <h2>Your Groups</h2>
-  <div id="groupsContainer"></div>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <i class="fas fa-users"></i>
+        <span>GroupFill</span>
+      </div>
+      
+      <div class="user-info">
+        <div class="user-welcome">Welcome, <span id="userName">User</span></div>
+        <div class="account-balance">Balance: <span id="accountBalance">UGX 0</span></div>
+      </div>
+    </header>
+    
+    <h1 class="page-title">Manage Your Groups</h1>
+    
+    <div class="spinner" id="groupsSpinner"></div>
+    <div class="loading-text" id="groupsLoading">Loading your groups...</div>
+    
+    <div class="group-grid" id="groupsContainer">
+      
+        <!-- Groups will be populated here -->
+    </div>
+    
+    <div class="empty-state" id="emptyGroups" style="display: none;">
+      <i class="fas fa-users-slash"></i>
+      <h3>No Groups Found</h3>
+      <p>You haven't created any groups yet. Submit your first group on the homepage!</p>
+      <button class="btn btn-primary" style="margin-top: 20px;" onclick="location.href='index.html'">
+        <i class="fas fa-plus-circle"></i> Create Group
+      </button>
+    </div>
+    
+    <div class="member-management" id="memberManagement" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-user-group"></i>
+        <span id="currentGroupTitle">Group Members</span>
+      </h2>
+      
+      <div class="form-group">
+        <input type="text" id="memberPhone" class="form-control" placeholder="Enter phone number to add">
+        <button class="btn btn-primary" id="addMemberBtn">
+          <i class="fas fa-plus"></i> Add
+        </button>
+      </div>
+      
+      <div class="search-bar">
+        <input type="text" id="searchMembers" class="form-control" placeholder="Search members...">
+        <button class="btn" id="searchBtn">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      
+      <div class="member-list" id="memberList">
+        <!-- Members will be listed here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <i class="fas fa-home"></i>
+      Home
+    </a>
+    <a href="groups.html" class="nav-item active">
+      <i class="fas fa-users"></i>
+      Groups
+    </a>
+    <a href="team.html" class="nav-item">
+      <i class="fas fa-user-friends"></i>
+      Team
+    </a>
+    <a href="account.html" class="nav-item">
+      <i class="fas fa-user"></i>
+      Account
+    </a>
+  </nav>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<!-- Firebase SDK with compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase configuration (consistent with index page)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+    authDomain: "groupfill-da470.firebaseapp.com",
+    projectId: "groupfill-da470",
+    storageBucket: "groupfill-da470.firebasestorage.app",
+    messagingSenderId: "951496844264",
+    appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d",
+    measurementId: "G-WWF4HHSGFV"
+  };
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
-      authDomain: "oblinks-7fdb1.firebaseapp.com",
-      projectId: "oblinks-7fdb1",
-      storageBucket: "oblinks-7fdb1.appspot.com",
-      messagingSenderId: "587017639779",
-      appId: "1:587017639779:web:d11b60f40f431cfc202556"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const container = document.getElementById("groupsContainer");
-
-    function normalizePhone(phone) {
-      return phone.replace(/^\+?256|^0/, "256");
-    }
-
-    function renderGroup(groupDoc) {
-      const group = groupDoc.data();
-      const div = document.createElement("div");
-      div.className = "group-card";
-      div.innerHTML = `
-        <h3>${group.type?.toUpperCase() || "WHATSAPP"} Group</h3>
-        <div class="info-row">Link: <input type="text" value="${group.link}" /></div>
-        <div class="info-row">Total Members: <span class="total-members">${group.totalMembers || 0}</span></div>
-        <div class="info-row">Status: ${group.status}</div>
-        <div class="info-row">Amount Paid: UGX ${group.amountPaid}</div>
-        <div class="info-row">Last Paid On: ${group.lastPaidOn || 'N/A'}</div>
-
-        <div class="form-group">
-          <input type="text" placeholder="Add phone number" class="phone-input" />
-          <button class="add-btn">Submit</button>
-          <button class="list-btn">List</button>
+  // Initialize Firebase with compat
+  const app = firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  
+  // DOM Elements
+  const userNameEl = document.getElementById('userName');
+  const accountBalanceEl = document.getElementById('accountBalance');
+  const groupsContainer = document.getElementById('groupsContainer');
+  const groupsSpinner = document.getElementById('groupsSpinner');
+  const groupsLoading = document.getElementById('groupsLoading');
+  const emptyGroups = document.getElementById('emptyGroups');
+  const memberManagement = document.getElementById('memberManagement');
+  const currentGroupTitle = document.getElementById('currentGroupTitle');
+  const memberList = document.getElementById('memberList');
+  const addMemberBtn = document.getElementById('addMemberBtn');
+  const memberPhone = document.getElementById('memberPhone');
+  const searchMembers = document.getElementById('searchMembers');
+  const searchBtn = document.getElementById('searchBtn');
+  
+  // Current user data
+  let currentUser = null;
+  let currentGroup = null;
+  let userGroups = [];
+  
+  // Check if user is logged in
+  function checkAuthState() {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in
+        loadUserData(user.uid);
+      } else {
+        // No user signed in, redirect to signup
+        window.location.href = 'signup.html';
+      }
+    });
+  }
+  // Load user data from Firestore
+  function loadUserData(userId) {
+    groupsSpinner.style.display = 'block';
+    groupsLoading.style.display = 'block';
+    
+    db.collection("users").where("userId", "==", userId).get()
+      .then((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          currentUser = userDoc.data();
+          currentUser.id = userDoc.id;
+          
+          // Update UI with user data
+          userNameEl.textContent = currentUser.name || "User";
+          accountBalanceEl.textContent = `${getCurrencySymbol()} ${currentUser.accountBalance.toLocaleString()}`;
+          
+          // Load user's groups
+          loadUserGroups();
+        } else {
+          console.error("No user document found!");
+          groupsSpinner.style.display = 'none';
+          groupsLoading.style.display = 'none';
+        }
+      })
+      .catch((error) => {
+        console.error("Error getting user document: ", error);
+        groupsSpinner.style.display = 'none';
+        groupsLoading.style.display = 'none';
+      });
+  }
+  
+  // Get currency symbol based on country
+  function getCurrencySymbol() {
+    if (!currentUser) return "UGX";
+    
+    const country = currentUser.country;
+    if (country === "Ghana") return "GHS";
+    if (country === "Tanzania") return "TZS";
+    if (country === "Nigeria") return "NGN";
+    return "UGX";
+  }
+  
+  // Load user's groups
+  function loadUserGroups() {
+    db.collection("groups").where("userId", "==", currentUser.userId).get()
+      .then((querySnapshot) => {
+        groupsSpinner.style.display = 'none';
+        groupsLoading.style.display = 'none';
+        
+        userGroups = [];
+        querySnapshot.forEach((doc) => {
+          const groupData = doc.data();
+          userGroups.push({
+            id: doc.id,
+            ...groupData
+          });
+        });
+        
+        // Check if there are no groups
+        if (userGroups.length === 0) {
+          emptyGroups.style.display = 'block';
+          return;
+        }
+        
+        // Render groups
+        renderUserGroups();
+      })
+      .catch((error) => {
+        groupsSpinner.style.display = 'none';
+        groupsLoading.style.display = 'none';
+        console.error("Error getting groups: ", error);
+      });
+  }
+  
+  // Render user's groups
+  function renderUserGroups() {
+    groupsContainer.innerHTML = '';
+    
+    userGroups.forEach(group => {
+      const groupCard = document.createElement('div');
+      groupCard.className = 'group-card';
+      groupCard.innerHTML = `
+        <div class="group-header">
+          <h3 class="group-title">${group.type?.toUpperCase() || 'WHATSAPP'} Group</h3>
         </div>
-
-        <div class="member-list">
-          <div class="search-bar">
-            <input type="text" placeholder="Search number..." class="search-input" />
+        <div class="group-body">
+          <div class="group-info"><strong>Group Link:</strong> <a href="${group.link}" target="_blank">${group.link.substring(0, 30)}...</a></div>
+          <div class="group-info"><strong>Status:</strong> <span class="status-${group.status}">${group.status}</span></div>
+          <div class="group-info"><strong>Total Members:</strong> ${group.totalMembers || 0}</div>
+          <div class="group-info"><strong>Amount Paid:</strong> ${getCurrencySymbol()} ${group.amountPaid || 0}</div>
+          <div class="group-info"><strong>Last Payment:</strong> ${group.lastPaidOn || 'Not yet'}</div>
+          
+          <div class="group-actions">
+            <button class="btn btn-primary manage-members" data-id="${group.id}">
+              <i class="fas fa-user-group"></i> Manage
+            </button>
+            <button class="btn btn-danger delete-group" data-id="${group.id}">
+              <i class="fas fa-trash"></i> Delete
+            </button>
           </div>
-          <div class="members-container"></div>
         </div>
       `;
-
-      const phoneInput = div.querySelector(".phone-input");
-      const addBtn = div.querySelector(".add-btn");
-      const listBtn = div.querySelector(".list-btn");
-      const membersList = div.querySelector(".member-list");
-      const membersContainer = div.querySelector(".members-container");
-      const searchInput = div.querySelector(".search-input");
-      const totalMembersText = div.querySelector(".total-members");
-
-      let members = group.members || [];
-
-      addBtn.onclick = async () => {
-        const rawPhone = phoneInput.value.trim();
-        const normPhone = normalizePhone(rawPhone);
-        const exists = members.find(p => normalizePhone(p) === normPhone);
-        if (exists) return alert("Number already exists in this group");
-        members.push(rawPhone);
-        await db.collection("groups").doc(groupDoc.id).update({
-          members,
-          totalMembers: members.length
-        });
-        totalMembersText.textContent = members.length;
-        alert("Member added");
-        phoneInput.value = "";
-      };
-
-      listBtn.onclick = () => {
-        membersList.classList.toggle("active");
-        updateMemberList();
-      };
-
-      function updateMemberList(filter = "") {
-        membersContainer.innerHTML = "";
-        members.filter(num => num.includes(filter)).forEach((num, i) => {
-          const item = document.createElement("div");
-          item.className = "member-item";
-          item.innerHTML = `
-            <span>${num}</span>
-            <i class="fas fa-trash" style="cursor:pointer;color:red" data-index="${i}"></i>
-          `;
-          membersContainer.appendChild(item);
-        });
-      }
-
-      membersContainer.onclick = async (e) => {
-        if (e.target.classList.contains("fa-trash")) {
-          const index = +e.target.dataset.index;
-          members.splice(index, 1);
-          await db.collection("groups").doc(groupDoc.id).update({
-            members,
-            totalMembers: members.length
-          });
-          totalMembersText.textContent = members.length;
-          updateMemberList(searchInput.value);
-        }
-      };
-
-      searchInput.oninput = () => {
-        updateMemberList(searchInput.value.trim());
-      };
-
-      container.appendChild(div);
-    }
-
-    // 🔐 Set persistence & check login
-    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          db.collection("groups").where("userId", "==", user.uid).get().then(snapshot => {
-            if (snapshot.empty) {
-              container.innerHTML = "<p>No groups found for your account.</p>";
-            } else {
-              snapshot.forEach(doc => renderGroup(doc));
-            }
-          });
-        } else {
-          window.location.href = "login.html";
+      groupsContainer.appendChild(groupCard);
+    });
+    
+    // Add event listeners
+    document.querySelectorAll('.manage-members').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const groupId = e.target.closest('.manage-members').dataset.id;
+        openMemberManagement(groupId);
+      });
+    });
+    
+    document.querySelectorAll('.delete-group').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const groupId = e.target.closest('.delete-group').dataset.id;
+        if (confirm('Are you sure you want to delete this group?')) {
+          deleteGroup(groupId);
         }
       });
     });
-  </script>
+  }
+  
+  // Open member management panel
+  function openMemberManagement(groupId) {
+    currentGroup = userGroups.find(group => group.id === groupId);
+    
+    if (!currentGroup) return;
+    
+    currentGroupTitle.textContent = `${currentGroup.type.toUpperCase()} Group Members`;
+    memberManagement.style.display = 'block';
+    
+    // Scroll to member management section
+    memberManagement.scrollIntoView({ behavior: 'smooth' });
+    
+    // Render members
+    renderMembers();
+  }
+  
+  // Render members for current group
+  function renderMembers(filter = '') {
+    if (!currentGroup || !currentGroup.members) {
+      memberList.innerHTML = '<div class="empty-state">No members found</div>';
+      return;
+    }
+    
+    const members = currentGroup.members.filter(member => 
+      member.toLowerCase().includes(filter.toLowerCase())
+    );
+    
+    if (members.length === 0) {
+      memberList.innerHTML = '<div class="empty-state">No members match your search</div>';
+      return;
+    }
+    
+    memberList.innerHTML = '';
+    
+    members.forEach((member, index) => {
+      const memberItem = document.createElement('div');
+      memberItem.className = 'member-item';
+      memberItem.innerHTML = `
+        <div class="member-phone">${member}</div>
+        <div class="member-actions">
+          <i class="fas fa-trash-can" data-index="${index}"></i>
+        </div>
+      `;
+      memberList.appendChild(memberItem);
+    });
+    
+    // Add event listeners to delete buttons
+    document.querySelectorAll('.fa-trash-can').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        deleteMember(index);
+      });
+    });
+  }
+  
+  // Add a new member
+  function addMember() {
+    const phone = memberPhone.value.trim();
+    if (!phone) {
+      alert('Please enter a phone number');
+      return;
+    }
+    
+    if (!currentGroup.members) {
+      currentGroup.members = [];
+    }
+    
+    // Check if member already exists
+    if (currentGroup.members.includes(phone)) {
+      alert('This member is already in the group');
+      return;
+    }
+    
+    currentGroup.members.push(phone);
+    currentGroup.totalMembers = currentGroup.members.length;
+    
+    // Update in Firestore
+    db.collection("groups").doc(currentGroup.id).update({
+      members: currentGroup.members,
+      totalMembers: currentGroup.totalMembers
+    })
+    .then(() => {
+      // Update local data
+      const groupIndex = userGroups.findIndex(g => g.id === currentGroup.id);
+      if (groupIndex !== -1) {
+        userGroups[groupIndex] = currentGroup;
+      }
+      
+      // Update UI
+      renderMembers();
+      renderUserGroups();
+      memberPhone.value = '';
+      
+      // Show success message
+      alert('Member added successfully!');
+    })
+    .catch((error) => {
+      console.error("Error adding member: ", error);
+      alert('Error adding member. Please try again.');
+    });
+  }
+  
+  // Delete a member
+  function deleteMember(index) {
+    if (!currentGroup || !currentGroup.members || index >= currentGroup.members.length) return;
+    
+    currentGroup.members.splice(index, 1);
+    currentGroup.totalMembers = currentGroup.members.length;
+    
+    // Update in Firestore
+    db.collection("groups").doc(currentGroup.id).update({
+      members: currentGroup.members,
+      totalMembers: currentGroup.totalMembers
+    })
+    .then(() => {
+      // Update local data
+      const groupIndex = userGroups.findIndex(g => g.id === currentGroup.id);
+      if (groupIndex !== -1) {
+        userGroups[groupIndex] = currentGroup;
+      }
+      
+      // Update UI
+      renderMembers();
+      renderUserGroups();
+    })
+    .catch((error) => {
+      console.error("Error deleting member: ", error);
+      alert('Error deleting member. Please try again.');
+    });
+  }
+  
+  // Delete a group
+  function deleteGroup(groupId) {
+    db.collection("groups").doc(groupId).delete()
+    .then(() => {
+      // Remove from local array
+      userGroups = userGroups.filter(group => group.id !== groupId);
+      
+      // Update UI
+      renderUserGroups();
+      
+      // Hide member management if it was for this group
+      if (currentGroup && currentGroup.id === groupId) {
+        memberManagement.style.display = 'none';
+        currentGroup = null;
+      }
+      
+      // Check if no groups left
+      if (userGroups.length === 0) {
+        emptyGroups.style.display = 'block';
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting group: ", error);
+      alert('Error deleting group. Please try again.');
+    });
+  }
+  
+  // Setup event listeners
+  function setupEventListeners() {
+    addMemberBtn.addEventListener('click', addMember);
+    
+    memberPhone.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addMember();
+      }
+    });
+    
+    searchBtn.addEventListener('click', () => {
+      renderMembers(searchMembers.value);
+    });
+    
+    searchMembers.addEventListener('keyup', () => {
+      renderMembers(searchMembers.value);
+    });
+  }
+  
+  // Initialize the page
+  document.addEventListener('DOMContentLoaded', () => {
+    // First check authentication state
+    checkAuthState();
+    
+    // Setup other event listeners
+    setupEventListeners();
+  });
+</script>
 </body>
 </html>
