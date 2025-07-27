@@ -393,9 +393,43 @@
       background-color: #fef3e6;
       color: #f59e0b;
     }
+    
+    /* Loading spinner */
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--primary);
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      text-align: center;
+      margin: 10px 0;
+      display: none;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--gray);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
   </style>
 </head>
-
 
 <body>
   <header>
@@ -431,6 +465,14 @@
         <i class="fas fa-plus-circle"></i>
         Groups to Create
       </h2>
+      
+      <div class="spinner" id="groupsSpinner"></div>
+      <div class="loading-text" id="groupsLoading">Loading groups...</div>
+      <div class="empty-state" id="emptyGroups" style="display: none;">
+        <i class="fas fa-inbox"></i>
+        <h3>No Groups Available</h3>
+        <p>There are currently no groups to create. Please check back later.</p>
+      </div>
       
       <div class="group-grid" id="announcementsGrid">
         <!-- Group cards will be populated here -->
@@ -471,7 +513,9 @@
           <input type="url" id="groupLink" class="form-control" placeholder="https://your-group-link" required>
         </div>
         
-        <button type="submit" class="btn btn-primary">
+        <div class="spinner" id="submitSpinner"></div>
+        
+        <button type="submit" class="btn btn-primary" id="submitBtn">
           <i class="fas fa-check-circle"></i>
           Submit Group
         </button>
@@ -556,264 +600,322 @@
       Account
     </a>
   </nav>
-  
 
-  <script>
-    // Sample data for group announcements (from grouptofill collection)
-    const groupToFill = [
-      {
-        id: "SatbS4iMw5jOE8rZEjLH",
-        grouptitle: "OBlinks",
-        description: "We want a nice group for online business enthusiasts to share ideas and opportunities.",
-        website: "https://onlinemarket-ug.com"
-      },
-      {
-        id: "SatbS4iMw5jOE8rZEjL2",
-        grouptitle: "Digital Marketing Hub",
-        description: "Create a group for digital marketers to discuss strategies, tools, and trends in the industry.",
-        website: "https://digitalmarketinghub.com"
-      },
-      {
-        id: "SatbS4iMw5jOE8rZEjL3",
-        grouptitle: "E-commerce Sellers",
-        description: "We need a group for e-commerce sellers to share experiences and growth strategies.",
-        website: "https://ecomcommunity.com"
-      },
-      {
-        id: "SatbS4iMw5jOE8rZEjL4",
-        grouptitle: "Freelancers Network",
-        description: "Create a networking group for freelancers to find opportunities and share resources.",
-        website: "https://freelancenet.org"
-      },
-      {
-        id: "SatbS4iMw5jOE8rZEjL5",
-        grouptitle: "Tech Innovators",
-        description: "We need a group for technology enthusiasts to discuss innovations and emerging technologies.",
-        website: "https://techinnovators.io"
-      }
-    ];
-    
-    // Payment rates based on country
-    const paymentRates = {
-      Uganda: {
-        currency: "UGX",
-        whatsapp: [10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000],
-        telegram: [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000]
-      },
-      Tanzania: {
-        currency: "TZS",
-        whatsapp: [13200, 26400, 39600, 52800, 66000, 79200, 92400, 105600, 118800, 132000],
-        telegram: [6600, 13200, 19800, 26400, 33000, 39600, 46200, 52800, 59400, 66000]
-      },
-      Nigeria: {
-        currency: "NGN",
-        whatsapp: [800, 1600, 2400, 3200, 4000, 4800, 5600, 6400, 7200, 8000],
-        telegram: [400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
-      },
-      Ghana: {
-        currency: "GHS",
-        whatsapp: [6.4, 12.8, 19.2, 25.6, 32.0, 38.4, 44.8, 51.2, 57.6, 64.0],
-        telegram: [3.2, 6.4, 9.6, 12.8, 16.0, 19.2, 22.4, 25.6, 28.8, 32.0]
-      }
-    };
-    
-    // Assume user data (in a real app, this would come from Firebase)
-    const userData = {
-      name: "Byzmukarta Mojaya",
-      email: "byzmukadman@uygd.mo@t",
-      phone: "07618288@w6",
-      country: "Uganda",
-      accountBalance: 2000,
-      totalWithdrawn: 0,
+<!-- Firebase SDK with compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase configuration (same as signup page)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+    authDomain: "groupfill-da470.firebaseapp.com",
+    projectId: "groupfill-da470",
+    storageBucket: "groupfill-da470.firebasestorage.app",
+    messagingSenderId: "951496844264",
+    appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d",
+    measurementId: "G-WWF4HHSGFV"
+  };
+
+  // Initialize Firebase with compat
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore(app);
+  
+  // Payment rates based on country
+  const paymentRates = {
+    Uganda: {
       currency: "UGX",
-      userId: "13XWe9W8Q4yJy8v7@m"
-    };
-    
-    // DOM Elements
-    const accountBalanceEl = document.getElementById('accountBalance');
-    const totalWithdrawnEl = document.getElementById('totalWithdrawn');
-    const announcementsGrid = document.getElementById('announcementsGrid');
-    const showMoreBtn = document.getElementById('showMoreBtn');
-    const showMoreContainer = document.getElementById('showMoreContainer');
-    const paymentTableBody = document.getElementById('paymentTableBody');
-    const groupForm = document.getElementById('groupForm');
-    const groupModal = document.getElementById('groupModal');
-    const modalGroupTitle = document.getElementById('modalGroupTitle');
-    const modalGroupDesc = document.getElementById('modalGroupDesc');
-    const visitWebsiteBtn = document.getElementById('visitWebsiteBtn');
-    const closeModal = document.getElementById('closeModal');
-    const withdrawBtn = document.getElementById('withdrawBtn');
-    
-    // Groups collection (simulated)
-    const groupsCollection = [];
-    
-    // Initialize the page
-    function initPage() {
-      // Set account balances
-      accountBalanceEl.textContent = `${userData.currency} ${userData.accountBalance.toLocaleString()}`;
-      totalWithdrawnEl.textContent = `${userData.currency} ${userData.totalWithdrawn.toLocaleString()}`;
-      
-      // Render initial groups (first 2)
-      renderGroups(0, 2);
-      
-      // Render payment table
-      renderPaymentTable();
-      
-      // Setup event listeners
-      setupEventListeners();
+      whatsapp: [10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000],
+      telegram: [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000]
+    },
+    Tanzania: {
+      currency: "TZS",
+      whatsapp: [13200, 26400, 39600, 52800, 66000, 79200, 92400, 105600, 118800, 132000],
+      telegram: [6600, 13200, 19800, 26400, 33000, 39600, 46200, 52800, 59400, 66000]
+    },
+    Nigeria: {
+      currency: "NGN",
+      whatsapp: [800, 1600, 2400, 3200, 4000, 4800, 5600, 6400, 7200, 8000],
+      telegram: [400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
+    },
+    Ghana: {
+      currency: "GHS",
+      whatsapp: [6.4, 12.8, 19.2, 25.6, 32.0, 38.4, 44.8, 51.2, 57.6, 64.0],
+      telegram: [3.2, 6.4, 9.6, 12.8, 16.0, 19.2, 22.4, 25.6, 28.8, 32.0]
     }
+  };
+  
+  // Assume user data (in a real app, this would come from Firebase)
+  const userData = {
+    name: "Byzmukarta Mojaya",
+    email: "byzmukadman@uygd.mo@t",
+    phone: "07618288@w6",
+    country: "Uganda",
+    accountBalance: 2000,
+    totalWithdrawn: 0,
+    currency: "UGX",
+    userId: "13XWe9W8Q4yJy8v7@m"
+  };
+  
+  // DOM Elements
+  const accountBalanceEl = document.getElementById('accountBalance');
+  const totalWithdrawnEl = document.getElementById('totalWithdrawn');
+  const announcementsGrid = document.getElementById('announcementsGrid');
+  const showMoreBtn = document.getElementById('showMoreBtn');
+  const showMoreContainer = document.getElementById('showMoreContainer');
+  const paymentTableBody = document.getElementById('paymentTableBody');
+  const groupForm = document.getElementById('groupForm');
+  const groupModal = document.getElementById('groupModal');
+  const modalGroupTitle = document.getElementById('modalGroupTitle');
+  const modalGroupDesc = document.getElementById('modalGroupDesc');
+  const visitWebsiteBtn = document.getElementById('visitWebsiteBtn');
+  const closeModal = document.getElementById('closeModal');
+  const withdrawBtn = document.getElementById('withdrawBtn');
+  const groupsSpinner = document.getElementById('groupsSpinner');
+  const groupsLoading = document.getElementById('groupsLoading');
+  const submitSpinner = document.getElementById('submitSpinner');
+  const submitBtn = document.getElementById('submitBtn');
+  const emptyGroups = document.getElementById('emptyGroups');
+  
+  // Variables for groups
+  let allGroups = [];
+  let visibleGroups = 2;
+  
+  // Initialize the page
+  function initPage() {
+    // Set account balances
+    accountBalanceEl.textContent = `${userData.currency} ${userData.accountBalance.toLocaleString()}`;
+    totalWithdrawnEl.textContent = `${userData.currency} ${userData.totalWithdrawn.toLocaleString()}`;
     
-    // Render group announcements
-    function renderGroups(start, end) {
-      const groupsToShow = groupToFill.slice(start, end);
-      
-      groupsToShow.forEach(group => {
-        const groupCard = document.createElement('div');
-        groupCard.className = 'group-card';
-        groupCard.innerHTML = `
-          <div class="group-header">
-            <h3 class="group-title">${group.grouptitle}</h3>
-          </div>
-          <div class="group-body">
-            <p class="group-desc">${group.description}</p>
-            <div class="group-actions">
-              <button class="btn btn-desc btn-sm view-details" data-id="${group.id}">
-                <i class="fas fa-info-circle"></i> Description
-              </button>
-              <button class="btn btn-primary btn-sm visit-website" data-website="${group.website}">
-                <i class="fas fa-external-link-alt"></i> Website
-              </button>
-            </div>
-          </div>
-        `;
-        announcementsGrid.appendChild(groupCard);
-      });
-      
-      // Show/hide "Show More" button
-      const shownGroups = announcementsGrid.children.length;
-      if (shownGroups >= groupToFill.length) {
-        showMoreContainer.style.display = 'none';
-      } else {
-        showMoreContainer.style.display = 'block';
-      }
-    }
+    // Load groups from Firestore
+    loadGroupsToCreate();
     
-    // Render payment table based on user's country
-    function renderPaymentTable() {
-      const countryData = paymentRates[userData.country] || paymentRates.Uganda;
-      const currencySymbol = countryData.currency;
-      
-      paymentTableBody.innerHTML = '';
-      
-      for (let i = 0; i < 10; i++) {
-        const members = (i + 1) * 100;
-        const row = document.createElement('tr');
-        
-        row.innerHTML = `
-          <td>${members}</td>
-          <td>WhatsApp</td>
-          <td>${currencySymbol} ${countryData.whatsapp[i].toLocaleString()}</td>
-        `;
-        paymentTableBody.appendChild(row);
-        
-        const telegramRow = document.createElement('tr');
-        telegramRow.innerHTML = `
-          <td>${members}</td>
-          <td>Telegram</td>
-          <td>${currencySymbol} ${countryData.telegram[i].toLocaleString()}</td>
-        `;
-        paymentTableBody.appendChild(telegramRow);
-      }
-    }
+    // Render payment table
+    renderPaymentTable();
     
     // Setup event listeners
-    function setupEventListeners() {
-      // Show more groups
-      showMoreBtn.addEventListener('click', () => {
-        const currentCount = announcementsGrid.children.length;
-        renderGroups(currentCount, currentCount + 2);
-      });
-      
-      // Group form submission
-      groupForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const phone = document.getElementById('groupPhone').value;
-        const type = document.getElementById('groupType').value;
-        const link = document.getElementById('groupLink').value;
-        
-        // Create group object
-        const newGroup = {
-          groupId: `GRP-${Date.now()}`,
-          phone: phone,
-          type: type,
-          link: link,
-          userId: userData.userId,
-          totalMembers: 0,
-          members: [],
-          lastPaidOn: null,
-          amountPaid: 0,
-          status: "active",
-          createdAt: new Date().toISOString()
-        };
-        
-        // Add to groups collection (simulated Firestore)
-        groupsCollection.push(newGroup);
-        
-        // Show success message
-        alert(`Group submitted successfully!\n\nGroup ID: ${newGroup.groupId}\nStatus: Active`);
-        groupForm.reset();
-      });
-      
-      // Modal close button
-      closeModal.addEventListener('click', () => {
-        groupModal.style.display = 'none';
-      });
-      
-      // Withdraw button
-      withdrawBtn.addEventListener('click', () => {
-        window.location.href = 'withdraw.html';
-      });
-      
-      // Click outside modal to close
-      window.addEventListener('click', (e) => {
-        if (e.target === groupModal) {
-          groupModal.style.display = 'none';
-        }
-      });
-      
-      // Delegated event for group details buttons
-      announcementsGrid.addEventListener('click', (e) => {
-        // Description button
-        if (e.target.closest('.view-details')) {
-          const btn = e.target.closest('.view-details');
-          const groupId = btn.dataset.id;
-          showGroupDetails(groupId);
-        }
-        
-        // Website button
-        if (e.target.closest('.visit-website')) {
-          const btn = e.target.closest('.visit-website');
-          const website = btn.dataset.website;
-          window.open(website, '_blank');
-        }
-      });
-    }
+    setupEventListeners();
+  }
+  
+  // Load groups to create from Firestore
+  function loadGroupsToCreate() {
+    groupsSpinner.style.display = 'block';
+    groupsLoading.style.display = 'block';
+    announcementsGrid.innerHTML = '';
+    emptyGroups.style.display = 'none';
     
-    // Show group details in modal
-    function showGroupDetails(groupId) {
-      const group = groupToFill.find(g => g.id === groupId);
+    db.collection("grouptofill").get()
+      .then((querySnapshot) => {
+        groupsSpinner.style.display = 'none';
+        groupsLoading.style.display = 'none';
+        
+        allGroups = [];
+        querySnapshot.forEach((doc) => {
+          const groupData = doc.data();
+          allGroups.push({
+            id: doc.id,
+            grouptitle: groupData.grouptitle || "Untitled Group",
+            description: groupData.description || "No description available",
+            website: groupData.website || "#"
+          });
+        });
+        
+        // Shuffle groups to display randomly
+        shuffleArray(allGroups);
+        
+        // Check if there are no groups
+        if (allGroups.length === 0) {
+          emptyGroups.style.display = 'block';
+          showMoreContainer.style.display = 'none';
+          return;
+        }
+        
+    // Render first groups
+        renderGroups(0, visibleGroups);
+        
+        // Show/hide "Show More" button
+        if (allGroups.length <= visibleGroups) {
+          showMoreContainer.style.display = 'none';
+        } else {
+          showMoreContainer.style.display = 'block';
+        }
+      })
+      .catch((error) => {
+        groupsSpinner.style.display = 'none';
+        groupsLoading.style.display = 'none';
+        console.error("Error getting documents: ", error);
+        announcementsGrid.innerHTML = `<p class="error">Error loading groups. Please try again later.</p>`;
+      });
+  }
+  
+  // Shuffle array to display groups randomly
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+  
+  // Render group announcements
+  function renderGroups(start, end) {
+    const groupsToShow = allGroups.slice(start, end);
+    
+    groupsToShow.forEach(group => {
+      const groupCard = document.createElement('div');
+      groupCard.className = 'group-card';
+      groupCard.innerHTML = `
+        <div class="group-header">
+          <h3 class="group-title">${group.grouptitle}</h3>
+        </div>
+        <div class="group-body">
+          <p class="group-desc">${group.description}</p>
+          <div class="group-actions">
+            <button class="btn btn-desc btn-sm view-details" data-id="${group.id}">
+              <i class="fas fa-info-circle"></i> Description
+            </button>
+            <button class="btn btn-primary btn-sm visit-website" data-website="${group.website}">
+              <i class="fas fa-external-link-alt"></i> Website
+            </button>
+          </div>
+        </div>
+      `;
+      announcementsGrid.appendChild(groupCard);
+    });
+  }
+  
+  // Render payment table based on user's country
+  function renderPaymentTable() {
+    const countryData = paymentRates[userData.country] || paymentRates.Uganda;
+    const currencySymbol = countryData.currency;
+    
+    paymentTableBody.innerHTML = '';
+    
+    for (let i = 0; i < 10; i++) {
+      const members = (i + 1) * 100;
+      const row = document.createElement('tr');
       
-      if (group) {
-        modalGroupTitle.textContent = group.grouptitle;
-        modalGroupDesc.textContent = group.description;
-        visitWebsiteBtn.onclick = () => window.open(group.website, '_blank');
-        groupModal.style.display = 'flex';
+      row.innerHTML = `
+        <td>${members}</td>
+        <td>WhatsApp</td>
+        <td>${currencySymbol} ${countryData.whatsapp[i].toLocaleString()}</td>
+      `;
+      paymentTableBody.appendChild(row);
+      
+      const telegramRow = document.createElement('tr');
+      telegramRow.innerHTML = `
+        <td>${members}</td>
+        <td>Telegram</td>
+        <td>${currencySymbol} ${countryData.telegram[i].toLocaleString()}</td>
+      `;
+      paymentTableBody.appendChild(telegramRow);
+    }
+  }
+  
+  // Setup event listeners
+  function setupEventListeners() {
+    // Show more groups
+    showMoreBtn.addEventListener('click', () => {
+      visibleGroups += 2;
+      renderGroups(0, visibleGroups);
+      
+      if (visibleGroups >= allGroups.length) {
+        showMoreContainer.style.display = 'none';
       }
-    }
+    });
     
-    // Initialize the page when DOM is loaded
-    document.addEventListener('DOMContentLoaded', initPage);
-  </script>
+    // Group form submission
+    groupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const phone = document.getElementById('groupPhone').value;
+      const type = document.getElementById('groupType').value;
+      const link = document.getElementById('groupLink').value;
+      
+      // Show loading state
+      submitBtn.style.display = 'none';
+      submitSpinner.style.display = 'block';
+      
+      // Create group object
+      const newGroup = {
+        phone: phone,
+        type: type,
+        link: link,
+        userId: userData.userId,
+        totalMembers: 0,
+        members: [],
+        lastPaidOn: null,
+        amountPaid: 0,
+        status: "active",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      // Add to groups collection in Firestore
+      db.collection("groups").add(newGroup)
+        .then((docRef) => {
+          submitSpinner.style.display = 'none';
+          submitBtn.style.display = 'block';
+          
+          // Show success message
+          alert(`Group submitted successfully!\n\nGroup ID: ${docRef.id}\nStatus: Active`);
+          groupForm.reset();
+        })
+        .catch((error) => {
+          submitSpinner.style.display = 'none';
+          submitBtn.style.display = 'block';
+          console.error("Error adding document: ", error);
+          alert("Error submitting group. Please try again.");
+        });
+    });
+    
+    // Modal close button
+    closeModal.addEventListener('click', () => {
+      groupModal.style.display = 'none';
+    });
+    
+    // Withdraw button
+    withdrawBtn.addEventListener('click', () => {
+      window.location.href = 'withdraw.html';
+    });
+    
+    // Click outside modal to close
+    window.addEventListener('click', (e) => {
+      if (e.target === groupModal) {
+        groupModal.style.display = 'none';
+      }
+    });
+    
+    // Delegated event for group details buttons
+    announcementsGrid.addEventListener('click', (e) => {
+      // Description button
+      if (e.target.closest('.view-details')) {
+        const btn = e.target.closest('.view-details');
+        const groupId = btn.dataset.id;
+        showGroupDetails(groupId);
+      }
+      
+      // Website button
+      if (e.target.closest('.visit-website')) {
+        const btn = e.target.closest('.visit-website');
+        const website = btn.dataset.website;
+        window.open(website, '_blank');
+      }
+    });
+  }
+  
+  // Show group details in modal
+  function showGroupDetails(groupId) {
+    const group = allGroups.find(g => g.id === groupId);
+    
+    if (group) {
+      modalGroupTitle.textContent = group.grouptitle;
+      modalGroupDesc.textContent = group.description;
+      visitWebsiteBtn.onclick = () => window.open(group.website, '_blank');
+      groupModal.style.display = 'flex';
+    }
+  }
+  
+  // Initialize the page when DOM is loaded
+  document.addEventListener('DOMContentLoaded', initPage);
+</script>
 </body>
 </html>
