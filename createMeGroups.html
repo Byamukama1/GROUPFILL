@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Me Groups - GroupFill</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      color: #007B55;
+      margin-bottom: 20px;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    form input, form textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #007B55;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .notice {
+      background-color: #d1e7dd;
+      color: #0f5132;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .notice a {
+      display: inline-block;
+      background-color: #007B55;
+      color: white;
+      font-weight: bold;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      background: #fff;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #007B55;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h2>Create Me Groups</h2>
+
+  <form id="groupRequestForm">
+    <input type="text" id="phone" placeholder="Phone Number" required>
+    <input type="text" id="title" placeholder="Group Title" required>
+    <textarea id="description" placeholder="Group Description" required></textarea>
+    <input type="url" id="website" placeholder="Website Link">
+    <input type="number" id="quantity" placeholder="Number of Groups" required>
+    <button type="submit">Submit Request</button>
+  </form>
+
+  <div class="notice">
+    If submission is successful,<br>Please proceed to payment.<br>
+    <a href="https://eversend.me/oblinks" target="_blank">💳 Pay via Eversend</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Groups</th>
+        <th>UGX</th>
+        <th>GHS</th>
+        <th>NGN</th>
+        <th>TZS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>5</td><td>50,000</td><td>157</td><td>10,400</td><td>32,700</td></tr>
+      <tr><td>10</td><td>100,000</td><td>314</td><td>20,800</td><td>65,400</td></tr>
+      <tr><td>15</td><td>150,000</td><td>471</td><td>31,200</td><td>98,100</td></tr>
+      <tr><td>20</td><td>200,000</td><td>628</td><td>41,600</td><td>130,800</td></tr>
+      <tr><td>25</td><td>250,000</td><td>785</td><td>52,000</td><td>163,500</td></tr>
+      <tr><td>30</td><td>300,000</td><td>942</td><td>62,400</td><td>196,200</td></tr>
+      <tr><td>35</td><td>350,000</td><td>1099</td><td>72,800</td><td>228,900</td></tr>
+      <tr><td>40</td><td>400,000</td><td>1256</td><td>83,200</td><td>261,600</td></tr>
+      <tr><td>45</td><td>450,000</td><td>1413</td><td>93,600</td><td>294,300</td></tr>
+      <tr><td>50</td><td>500,000</td><td>1570</td><td>104,000</td><td>327,000</td></tr>
+    </tbody>
+  </table>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
+      authDomain: "groupfill-da470.firebaseapp.com",
+      projectId: "groupfill-da470",
+      storageBucket: "groupfill-da470.appspot.com",
+      messagingSenderId: "951496844264",
+      appId: "1:951496844264:web:fbb8c7510610c8a37bfa5d"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById("groupRequestForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const phone = document.getElementById("phone").value;
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      const website = document.getElementById("website").value;
+      const quantity = parseInt(document.getElementById("quantity").value);
+
+      try {
+        await db.collection("requests").add({
+          phone,
+          title,
+          description,
+          website,
+          quantity,
+          paymentStatus: "pending", // Automatically marked as pending
+          createdAt: new Date()
+        });
+        alert("✅ Group request submitted successfully!");
+        document.getElementById("groupRequestForm").reset();
+      } catch (error) {
+        alert("❌ Error submitting request.");
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
