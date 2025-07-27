@@ -428,8 +428,21 @@
       color: var(--primary);
       margin-bottom: 15px;
     }
+    
+    .user-welcome {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--dark);
+      margin-bottom: 15px;
+    }
+    
+    .user-welcome span {
+      font-weight: 600;
+      color: var(--primary);
+    }
   </style>
 </head>
+
 
 <body>
   <header>
@@ -438,16 +451,20 @@
         <i class="fas fa-users"></i>
         <span>GroupFill</span>
       </div>
+      
+      <div class="user-welcome" id="userWelcome">
+        Welcome back, <span id="userName">User</span>!
+      </div>
 
       <div class="account-summary">
         <div class="balance-card">
           <h3>Account Balance</h3>
-          <div class="amount" id="accountBalance">UGX 2,000</div>
+          <div class="amount" id="accountBalance">Loading...</div>
         </div>
         
         <div class="balance-card">
           <h3>Total Withdrawn</h3>
-          <div class="amount" id="totalWithdrawn">UGX 0</div>
+          <div class="amount" id="totalWithdrawn">Loading...</div>
         </div>
         
         <button id="withdrawBtn" class="btn btn-primary">
@@ -601,11 +618,13 @@
     </a>
   </nav>
 
+
 <!-- Firebase SDK with compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-  // Firebase configuration (same as signup page)
+  // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyBbhmVcHvFZRwNsyWPMNqWcZmGpHwKPIJk",
     authDomain: "groupfill-da470.firebaseapp.com",
@@ -618,7 +637,8 @@
 
   // Initialize Firebase with compat
   const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore(app);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
   
   // Payment rates based on country
   const paymentRates = {
@@ -644,21 +664,14 @@
     }
   };
   
-  // Assume user data (in a real app, this would come from Firebase)
-  const userData = {
-    name: "Byzmukarta Mojaya",
-    email: "byzmukadman@uygd.mo@t",
-    phone: "07618288@w6",
-    country: "Uganda",
-    accountBalance: 2000,
-    totalWithdrawn: 0,
-    currency: "UGX",
-    userId: "13XWe9W8Q4yJy8v7@m"
-  };
+  // Current user data
+  let currentUser = null;
   
   // DOM Elements
   const accountBalanceEl = document.getElementById('accountBalance');
   const totalWithdrawnEl = document.getElementById('totalWithdrawn');
+  const userNameEl = document.getElementById('userName');
+  const userWelcomeEl = document.getElementById('userWelcome');
   const announcementsGrid = document.getElementById('announcementsGrid');
   const showMoreBtn = document.getElementById('showMoreBtn');
   const showMoreContainer = document.getElementById('showMoreContainer');
@@ -680,20 +693,65 @@
   let allGroups = [];
   let visibleGroups = 2;
   
-  // Initialize the page
-  function initPage() {
+  // Check if user is logged in
+  function checkAuthState() {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in
+        loadUserData(user.uid);
+      } else {
+        // No user signed in, redirect to signup
+        window.location.href = 'signup.html';
+      }
+    });
+  }
+  
+  // Load user data from Firestore
+  function loadUserData(userId) {
+    db.collection("users").where("userId", "==", userId).get()
+      .then((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          currentUser = userDoc.data();
+          currentUser.id = userDoc.id;
+          
+          // Update UI with user data
+          updateUserUI();
+          
+          // Now load groups and initialize the rest
+          loadGroupsToCreate();
+          renderPaymentTable();
+          setupEventListeners();
+        } else {
+          console.error("No user document found!");
+        }
+      })
+      .catch((error) => {
+        console.error("Error getting user document: ", error);
+      });
+  }
+  
+  // Update UI with user data
+  function updateUserUI() {
+    if (!currentUser) return;
+    
     // Set account balances
-    accountBalanceEl.textContent = `${userData.currency} ${userData.accountBalance.toLocaleString()}`;
-    totalWithdrawnEl.textContent = `${userData.currency} ${userData.totalWithdrawn.toLocaleString()}`;
+    accountBalanceEl.textContent = `${getCurrencySymbol()} ${currentUser.accountBalance.toLocaleString()}`;
+    totalWithdrawnEl.textContent = `${getCurrencySymbol()} ${currentUser.totalwithdrawn.toLocaleString()}`;
+    userNameEl.textContent = currentUser.name || "User";
     
-    // Load groups from Firestore
-    loadGroupsToCreate();
+    // Show welcome message
+    userWelcomeEl.style.display = 'block';
+  }
+  
+  // Get currency symbol based on country
+  function getCurrencySymbol() {
+    if (!currentUser) return "UGX";
     
-    // Render payment table
-    renderPaymentTable();
+    const country = currentUser.country;
+    if (!paymentRates[country]) return "UGX";
     
-    // Setup event listeners
-    setupEventListeners();
+    return paymentRates[country].currency;
   }
   
   // Load groups to create from Firestore
@@ -729,7 +787,7 @@
           return;
         }
         
-    // Render first groups
+        // Render first groups
         renderGroups(0, visibleGroups);
         
         // Show/hide "Show More" button
@@ -785,7 +843,10 @@
   
   // Render payment table based on user's country
   function renderPaymentTable() {
-    const countryData = paymentRates[userData.country] || paymentRates.Uganda;
+    if (!currentUser) return;
+    
+    const country = currentUser.country || "Uganda";
+    const countryData = paymentRates[country] || paymentRates.Uganda;
     const currencySymbol = countryData.currency;
     
     paymentTableBody.innerHTML = '';
@@ -827,6 +888,11 @@
     groupForm.addEventListener('submit', (e) => {
       e.preventDefault();
       
+      if (!currentUser) {
+        alert("Please sign in to submit a group");
+        return;
+      }
+      
       const phone = document.getElementById('groupPhone').value;
       const type = document.getElementById('groupType').value;
       const link = document.getElementById('groupLink').value;
@@ -840,7 +906,7 @@
         phone: phone,
         type: type,
         link: link,
-        userId: userData.userId,
+        userId: currentUser.userId,
         totalMembers: 0,
         members: [],
         lastPaidOn: null,
@@ -914,8 +980,11 @@
     }
   }
   
-  // Initialize the page when DOM is loaded
-  document.addEventListener('DOMContentLoaded', initPage);
+  // Initialize the page
+  document.addEventListener('DOMContentLoaded', () => {
+    // First check authentication state
+    checkAuthState();
+  });
 </script>
 </body>
 </html>
