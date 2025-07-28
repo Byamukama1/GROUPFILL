@@ -10,7 +10,7 @@
       font-family: 'Segoe UI', sans-serif;
       background: #ffffff;
       margin: 0;
-      padding: 0 0 80px; /* space for bottom nav */
+      padding: 0 0 80px;
     }
     .container {
       max-width: 500px;
@@ -57,6 +57,9 @@
       font-size: 16px;
       font-weight: bold;
       text-decoration: none;
+    }
+    .btn i {
+      margin-right: 8px;
     }
     .btn:hover {
       background: #005f40;
@@ -123,15 +126,24 @@
     <button class="btn save-btn" id="saveBtn" onclick="saveProfile()">Save Changes</button>
 
     <a class="btn" href="createMeGroups.html">Create Me Groups</a>
+
     <a class="btn" href="https://t.me/+256783472017" target="_blank">
-      <i class="fab fa-telegram-plane"></i> Customer Care
+      <i class="fab fa-telegram-plane"></i> Customer Care (Telegram)
     </a>
+
+    <a class="btn" href="https://wa.me/256704567407" target="_blank">
+      <i class="fab fa-whatsapp"></i> Customer Care (WhatsApp)
+    </a>
+
     <a class="btn" href="https://t.me/+gA04WRwbA6s0YWQ0" target="_blank">
       <i class="fab fa-telegram"></i> Join Telegram Group
     </a>
+
+    <a class="btn" href="https://chat.whatsapp.com/IORTXRJbCToF5pWetIYqBb?mode=ac_t" target="_blank">
+      <i class="fab fa-whatsapp"></i> Join WhatsApp Group
+    </a>
   </div>
 
-  <!-- Bottom Navigation -->
   <div class="bottom-nav">
     <a href="index.html"><i class="fas fa-home"></i><br>Home</a>
     <a href="groups.html"><i class="fas fa-users"></i><br>Groups</a>
@@ -139,7 +151,6 @@
     <a href="account.html"><i class="fas fa-user"></i><br>Account</a>
   </div>
 
-  <!-- Firebase & Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
